@@ -54,14 +54,26 @@
 
 	var _tpl = __webpack_require__(5);
 
+	var _validate = __webpack_require__(6);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	// 这里填写发送请求的东西，比如给接口发送
+	// 点击分类的button,发送请求，并且获得数据
 
 	var getTypes = {
 	    title: (0, _jquery2.default)('.t-left'),
 	    panel: (0, _jquery2.default)('.t-panel'), //获取panel
 	    categ: (0, _jquery2.default)('.categ_m'), //获取目录节点
+	    detail: (0, _jquery2.default)('.t-detail'), //获取详细内容
 	    flag: 0,
+	    //获取日期
+	    dealDate: function dealDate(date) {
+	        return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+	    },
 	    init: function init() {
+	        var _this = this;
+
 	        this.title.on('click', 'a', function (e) {
 	            var $target = (0, _jquery2.default)(e.target),
 	                row = $target.data('row'); //获取分类的行号
@@ -70,7 +82,48 @@
 	                getTypes.classify(data); //获得data之后将分类内容填入
 	            });
 	        });
+	        this.panel.on('click', 'a', function (e) {
+	            var $target = (0, _jquery2.default)(e.target),
+	                type = $target.html(),
+	                //获取类型;
+	            start = (0, _jquery2.default)('#startDate').val(),
+	                //搜索的开始日期
+	            end = (0, _jquery2.default)('#endDate').val(),
+	                //搜索的结束日期
+	            conf1 = _validate.validator.val({ value: start, rule: "isNonEmpty" }),
+	                //验证开始日期是否为空
+	            conf2 = _validate.validator.val({ value: end, rule: "isNonEmpty" }); //验证结束日期是否为空
+	            //判断日期是否为空
+	            if (conf1) {
+	                alert(conf1); //输出非空信息
+	                return;
+	            } else if (conf2) {
+	                alert(conf2); //输出非空信息
+	                return;
+	            }
+	            console.log("ok");
+	            _http.http.getDetail({ //发送请求,获取某一课程的详细信息
+	                type: type,
+	                start: start,
+	                end: end
+	            }).then(function (data) {
+	                var startNum = data.startNum;
+	                var endNum = data.endNum;
+	                var increase = endNum - startNum;
+	                var html = _tpl.temp.showDate({ //填入模板
+	                    type: type,
+	                    start: start,
+	                    end: end,
+	                    startNum: startNum,
+	                    endNum: endNum,
+	                    increaseNum: increase
+	                });
+	                _this.detail.html(html);
+	            });
+	        });
 	    },
+
+	    //当首次点击时，添加查询时间选项并添加课程类型,第二次时,直接改变课程类型
 	    classify: function classify(data) {
 	        //data是获得的参数
 	        if (getTypes.flag === 0) {
@@ -80,9 +133,7 @@
 	            getTypes.categ.html(_tpl.temp.setClassify(data));
 	        }
 	    }
-	}; // 这里填写发送请求的东西，比如给接口发送
-	// 点击分类的button,发送请求，并且获得数据
-
+	};
 	getTypes.init();
 
 /***/ },
@@ -2343,7 +2394,8 @@
 
 	var http = new Object(),
 	    Pathurl = {
-		getType: "/getType" //获取课程分类的路由
+		getType: "/getType", //获取课程分类的路由
+		getDetail: "/getDetail" //获取课程详细信息
 	};
 	/*
 	* @method get
@@ -2357,6 +2409,23 @@
 			type: "GET"
 		});
 	};
+	http.getDetail = function (_ref) {
+		var start = _ref.start;
+		var end = _ref.end;
+		var type = _ref.type;
+
+		return _jquery2.default.ajax({
+			url: Pathurl.getDetail,
+			type: 'POST',
+			contentType: "application/json",
+			dataType: "JSON",
+			data: JSON.stringify({
+				start: start,
+				end: end,
+				type: type
+			})
+		});
+	};
 	exports.http = http;
 
 /***/ },
@@ -2366,18 +2435,91 @@
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
-		value: true
+	    value: true
 	});
 	//处理模板文件
 	var temp = {
-		setTime: function setTime() {
-			return " <h2>请选择查询时间:</h2>\n            <p>开始:<input type=\"date\" class=\"startDate\" id=\"startDate\"></p>\n            <p>结束:<input type=\"date\" class=\"endDate\" id=\"endDate\"></p>\n            <h2>课程类型</h2>";
-		},
-		setClassify: function setClassify(data) {
-			return "  <div class=\"categ_m\">\n\t\t\t" + data + "\n  \t\t </div>";
-		}
+	    setTime: function setTime() {
+	        return " <h2>请选择查询时间:</h2>\n            <p>开始:<input type=\"date\" class=\"startDate\" id=\"startDate\"></p>\n            <p>结束:<input type=\"date\" class=\"endDate\" id=\"endDate\"></p>\n            <h2>课程类型</h2>";
+	    },
+	    setClassify: function setClassify(data) {
+	        return "  <div class=\"categ_m\">\n\t\t\t" + data + "\n  \t\t </div>";
+	    },
+	    showDate: function showDate(_ref) {
+	        var type = _ref.type;
+	        var start = _ref.start;
+	        var end = _ref.end;
+	        var startNum = _ref.startNum;
+	        var endNum = _ref.endNum;
+	        var increaseNum = _ref.increaseNum;
+
+	        return "  <h2 id=\"courseTypes\">" + type + "</h2>\n            <table>\n                <thead>\n                    <tr>\n                        <th></th>\n                        <th class=\"startDate\">" + start + "</th>\n                        <th class=\"endDate\">" + end + "</th>\n                        <th class=\"increase\">新增</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr>\n                        <th>课程数</th>\n                        <td id=\"startNum\">" + startNum + "</td>\n                        <td id=\"endNum\">" + endNum + "</td>\n                        <td id=\"increaseNum\">" + increaseNum + "</td>\n                    </tr>\n                </tbody>\n            </table>";
+	    }
 	};
 	exports.temp = temp;
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var validator = {
+	    types: {
+	        isEmail: { //邮箱的验证规则
+	            validate: function validate(value) {
+	                var reg = /^\w+((-\w+)|(\.\w+))*\@[A-Za-z0-9]+((\.|-)[A-Za-z0-9]+)*\.[A-Za-z0-9]+$/;
+	                return reg.test(value);
+	            },
+	            instructions: "邮箱格式错误"
+	        },
+	        isNonEmpty: { //是否为空的验证规则
+	            validate: function validate(value) {
+	                return !(value == "" || value === undefined);
+	            },
+	            instructions: "日期不能为空"
+	        },
+	        isPassword: { //密码的验证规则
+	            validate: function validate(value) {
+	                if (value.length < 6) {
+	                    return false;
+	                }
+	                var reg = /^(([a-z]+[\w]*[0-9]+)|([0-9]+[\w]*[a-z]+))[a-z0-9]*$/i;
+	                return reg.test(value);
+	            },
+	            instructions: "密码长度在6-20位，且必须包含数字和字母"
+	        },
+	        isNickname: { //验证昵称的规则
+	            validate: function validate(value) {
+	                if (value.length > 8 || value == "") {
+	                    return false;
+	                }
+	                return true;
+	            },
+	            instructions: "昵称字符长度要在8个以内"
+	        }
+	    },
+	    /*
+	    * @param: data
+	    *         @param1: rule,验证规则,比如isNonEmpty
+	    *         @param2: value,验证内容更
+	    */
+	    val: function val(data) {
+	        var rule = data.rule;
+	        var value = data.value;
+	        var type = this.types[rule];
+	        if (type.validate(value)) {
+	            return false;
+	        } else {
+	            return type.instructions;
+	        }
+	    }
+	};
+	exports.validator = validator;
 
 /***/ }
 /******/ ]);

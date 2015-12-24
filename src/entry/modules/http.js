@@ -1,7 +1,8 @@
 import $ from 'jquery';
 let http = new Object(),
 	Pathurl = {
-	getType:"/getType"  //获取课程分类的路由
+	getType:"/getType",  //获取课程分类的路由
+	getDetail:"/getDetail"  //获取课程详细信息
 }
 /*
 * @method get
@@ -13,6 +14,19 @@ http.getType = function(order){
 	return $.ajax({
 		url:url,
 		type:"GET"
+	})
+}
+http.getDetail = function({start,end,type}){
+	return $.ajax({
+		url:Pathurl.getDetail,
+		type:'POST',
+		contentType:"application/json",
+		dataType:"JSON",
+		data:JSON.stringify({
+			start:start,
+			end:end,
+			type:type
+		})
 	})
 }
 export {http};

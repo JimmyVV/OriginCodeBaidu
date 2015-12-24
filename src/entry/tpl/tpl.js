@@ -10,6 +10,27 @@ let temp = {
 		return `  <div class="categ_m">
 			${data}
   		 </div>`;
+	},
+	showDate({type,start,end,startNum,endNum,increaseNum}){
+		return `  <h2 id="courseTypes">${type}</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="startDate">${start}</th>
+                        <th class="endDate">${end}</th>
+                        <th class="increase">新增</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>课程数</th>
+                        <td id="startNum">${startNum}</td>
+                        <td id="endNum">${endNum}</td>
+                        <td id="increaseNum">${increaseNum}</td>
+                    </tr>
+                </tbody>
+            </table>`
 	}
 }
 export {temp};
