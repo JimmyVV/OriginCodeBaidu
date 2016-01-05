@@ -16,7 +16,7 @@ http.getType = function(order){
 		type:"GET"
 	})
 }
-http.getDetail = function({start,end,type}){
+http.getDetail = function({start,href}){
 	return $.ajax({
 		url:Pathurl.getDetail,
 		type:'POST',
@@ -24,8 +24,7 @@ http.getDetail = function({start,end,type}){
 		dataType:"JSON",
 		data:JSON.stringify({
 			start:start,
-			end:end,
-			type:type
+			href:href
 		})
 	})
 }

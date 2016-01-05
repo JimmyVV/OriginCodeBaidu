@@ -56,15 +56,13 @@
 
 	var _validate = __webpack_require__(6);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	var _date = __webpack_require__(7);
 
-	// 这里填写发送请求的东西，比如给接口发送
-	// 点击分类的button,发送请求，并且获得数据
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var getTypes = {
 	    title: (0, _jquery2.default)('.t-left'),
 	    panel: (0, _jquery2.default)('.t-panel'), //获取panel
-	    categ: (0, _jquery2.default)('.categ_m'), //获取目录节点
 	    detail: (0, _jquery2.default)('.t-detail'), //获取详细内容
 	    flag: 0,
 	    //获取日期
@@ -84,56 +82,55 @@
 	        });
 	        this.panel.on('click', 'a', function (e) {
 	            var $target = (0, _jquery2.default)(e.target),
-	                type = $target.html(),
+	                href = $target.data('src'),
 	                //获取类型;
+	            end = (0, _date.getDate)(-1),
+	                type = $target.html(),
+	                //获取Html内容
 	            start = (0, _jquery2.default)('#startDate').val(),
 	                //搜索的开始日期
-	            end = (0, _jquery2.default)('#endDate').val(),
-	                //搜索的结束日期
-	            conf1 = _validate.validator.val({ value: start, rule: "isNonEmpty" }),
-	                //验证开始日期是否为空
-	            conf2 = _validate.validator.val({ value: end, rule: "isNonEmpty" }); //验证结束日期是否为空
+	            conf1 = _validate.validator.val({ value: start, rule: "isNonEmpty" }); //验证开始日期是否为空
 	            //判断日期是否为空
 	            if (conf1) {
 	                alert(conf1); //输出非空信息
 	                return;
-	            } else if (conf2) {
-	                alert(conf2); //输出非空信息
-	                return;
 	            }
-	            console.log("ok");
 	            _http.http.getDetail({ //发送请求,获取某一课程的详细信息
-	                type: type,
-	                start: start,
-	                end: end
+	                href: href,
+	                start: start
 	            }).then(function (data) {
-	                var startNum = data.startNum;
-	                var endNum = data.endNum;
-	                var increase = endNum - startNum;
-	                var html = _tpl.temp.showDate({ //填入模板
-	                    type: type,
-	                    start: start,
-	                    end: end,
-	                    startNum: startNum,
-	                    endNum: endNum,
-	                    increaseNum: increase
-	                });
+	                var num = data.num;
+	                var increase = data.increase;
+	                var decrease = data.decrease;
+	                var freeCourses = data.freeCourses;
+	                var freeIncrease = data.freeIncrease;
+	                var freeDecrease = data.freeDecrease;
+	                var VipCourses = data.VipCourses;
+	                var VipIncrease = data.VipIncrease;
+	                var VipDecrease = data.VipDecrease;
+	                var students = data.students;
+	                var html = _tpl.temp.showDate({ type: type, start: start, end: end, num: num, increase: increase, decrease: decrease, freeCourses: freeCourses, freeIncrease: freeIncrease, freeDecrease: freeDecrease, VipCourses: VipCourses, VipIncrease: VipIncrease, VipDecrease: VipDecrease, students: students });
 	                _this.detail.html(html);
 	            });
 	        });
 	    },
 
+	    //返回昨天的日期
+
 	    //当首次点击时，添加查询时间选项并添加课程类型,第二次时,直接改变课程类型
 	    classify: function classify(data) {
 	        //data是获得的参数
+
 	        if (getTypes.flag === 0) {
 	            getTypes.panel.html(_tpl.temp.setTime() + '\n        \t\t\t\t\t ' + _tpl.temp.setClassify(data));
-	            getTypes.lag++;
+	            getTypes.flag++;
 	        } else {
-	            getTypes.categ.html(_tpl.temp.setClassify(data));
+	            (0, _jquery2.default)('.categ_m').html(data);
 	        }
 	    }
-	};
+	}; // 这里填写发送请求的东西，比如给接口发送
+	// 点击分类的button,发送请求，并且获得数据
+
 	getTypes.init();
 
 /***/ },
@@ -2411,8 +2408,7 @@
 	};
 	http.getDetail = function (_ref) {
 		var start = _ref.start;
-		var end = _ref.end;
-		var type = _ref.type;
+		var href = _ref.href;
 
 		return _jquery2.default.ajax({
 			url: Pathurl.getDetail,
@@ -2421,8 +2417,7 @@
 			dataType: "JSON",
 			data: JSON.stringify({
 				start: start,
-				end: end,
-				type: type
+				href: href
 			})
 		});
 	};
@@ -2440,7 +2435,8 @@
 	//处理模板文件
 	var temp = {
 	    setTime: function setTime() {
-	        return " <h2>请选择查询时间:</h2>\n            <p>开始:<input type=\"date\" class=\"startDate\" id=\"startDate\"></p>\n            <p>结束:<input type=\"date\" class=\"endDate\" id=\"endDate\"></p>\n            <h2>课程类型</h2>";
+	        return " <h2>请选择查询时间:</h2>\n            <p>查询日期:<input type=\"date\" class=\"startDate\" id=\"startDate\"></p>\n            <h2>课程类型</h2>";
+	        // <p>结束:<input type="date" class="endDate" id="endDate"></p>
 	    },
 	    setClassify: function setClassify(data) {
 	        return "  <div class=\"categ_m\">\n\t\t\t" + data + "\n  \t\t </div>";
@@ -2449,11 +2445,18 @@
 	        var type = _ref.type;
 	        var start = _ref.start;
 	        var end = _ref.end;
-	        var startNum = _ref.startNum;
-	        var endNum = _ref.endNum;
-	        var increaseNum = _ref.increaseNum;
+	        var num = _ref.num;
+	        var increase = _ref.increase;
+	        var decrease = _ref.decrease;
+	        var freeCourses = _ref.freeCourses;
+	        var freeIncrease = _ref.freeIncrease;
+	        var freeDecrease = _ref.freeDecrease;
+	        var VipCourses = _ref.VipCourses;
+	        var VipIncrease = _ref.VipIncrease;
+	        var VipDecrease = _ref.VipDecrease;
+	        var students = _ref.students;
 
-	        return "  <h2 id=\"courseTypes\">" + type + "</h2>\n            <table>\n                <thead>\n                    <tr>\n                        <th></th>\n                        <th class=\"startDate\">" + start + "</th>\n                        <th class=\"endDate\">" + end + "</th>\n                        <th class=\"increase\">新增</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr>\n                        <th>课程数</th>\n                        <td id=\"startNum\">" + startNum + "</td>\n                        <td id=\"endNum\">" + endNum + "</td>\n                        <td id=\"increaseNum\">" + increaseNum + "</td>\n                    </tr>\n                </tbody>\n            </table>";
+	        return "  <h2 id=\"courseTypes\">" + type + "</h2>\n            <table>\n                <thead>\n                    <tr>\n                        <th></th>\n                        <th class=\"startDate\">" + end + "</th>\n                        <th class=\"endDate\">" + start + "</th>\n                        <th class=\"increase\">新增</th>\n                        <th class=\"increase\">下架</th>\n                        <th class=\"increase\">正在学习人数</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr>\n                        <th>课程数</th>\n                        <td id=\"startNum\"></td>\n                        <td id=\"endNum\">" + num + "</td>\n                        <td id=\"increaseNum\">" + increase + "</td>\n                        <td id=\"increaseNum\">" + decrease + "</td>\n                        <td id=\"increaseNum\">" + students + "</td>\n                    </tr>\n                     <tr>\n                        <th>免费课程</th>\n                        <td id=\"startNum\"></td>\n                        <td id=\"endNum\">" + freeCourses + "</td>\n                        <td id=\"increaseNum\">" + freeIncrease + "</td>\n                        <td id=\"increaseNum\">" + freeDecrease + "</td>\n                    </tr>\n                     <tr>\n                        <th>付费课程</th>\n                        <td id=\"startNum\"></td>\n                        <td id=\"endNum\">" + VipCourses + "</td>\n                        <td id=\"increaseNum\">" + VipIncrease + "</td>\n                        <td id=\"increaseNum\">" + VipDecrease + "</td>\n                    </tr>\n                </tbody>\n            </table>";
 	    }
 	};
 	exports.temp = temp;
@@ -2520,6 +2523,47 @@
 	    }
 	};
 	exports.validator = validator;
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	Date.prototype.DateAdd = function (strInterval, Number) {
+	  var dtTmp = this;
+	  switch (strInterval) {
+	    case 's':
+	      return new Date(Date.parse(dtTmp) + 1000 * Number);
+	    case 'n':
+	      return new Date(Date.parse(dtTmp) + 60000 * Number);
+	    case 'h':
+	      return new Date(Date.parse(dtTmp) + 3600000 * Number);
+	    case 'd':
+	      return new Date(Date.parse(dtTmp) + 86400000 * Number);
+	    case 'w':
+	      return new Date(Date.parse(dtTmp) + 86400000 * 7 * Number);
+	    case 'q':
+	      return new Date(dtTmp.getFullYear(), dtTmp.getMonth() + Number * 3, dtTmp.getDate(), dtTmp.getHours(), dtTmp.getMinutes(), dtTmp.getSeconds());
+	    case 'm':
+	      return new Date(dtTmp.getFullYear(), dtTmp.getMonth() + Number, dtTmp.getDate(), dtTmp.getHours(), dtTmp.getMinutes(), dtTmp.getSeconds());
+	    case 'y':
+	      return new Date(dtTmp.getFullYear() + Number, dtTmp.getMonth(), dtTmp.getDate(), dtTmp.getHours(), dtTmp.getMinutes(), dtTmp.getSeconds());
+	  }
+	};
+
+	function GetDateStr2(AddDayCount) {
+	  var dd = new Date();
+	  var ddd = dd.DateAdd('d', AddDayCount); //得到指定日期数
+	  var y = ddd.getFullYear();
+	  var m = ddd.getMonth() + 1; //获取当前月
+	  var d = ddd.getDate();
+	  return y + "-" + m + "-" + d;
+	}
+	exports.getDate = GetDateStr2;
 
 /***/ }
 /******/ ]);

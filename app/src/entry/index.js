@@ -13,11 +13,10 @@ import {
     validator
 }
 from './modules/validate';
-
+import {getDate} from './modules/date';
 let getTypes = {
     title: $('.t-left'),
     panel: $('.t-panel'), //获取panel
-    categ: $('.categ_m'), //获取目录节点
     detail: $('.t-detail'), //获取详细内容
     flag: 0,
     //获取日期
@@ -35,50 +34,40 @@ let getTypes = {
         });
         this.panel.on('click', 'a', (e) => {
             let $target = $(e.target),
-                type = $target.html(), //获取类型;
+                href = $target.data('src'), //获取类型;
+                end = getDate(-1),
+                type = $target.html(), //获取Html内容
                 start = $('#startDate').val(), //搜索的开始日期
-                end = $('#endDate').val(), //搜索的结束日期
-                conf1 = validator.val({value:start,rule:"isNonEmpty"}),  //验证开始日期是否为空
-                conf2 = validator.val({value:end,rule:"isNonEmpty"}); //验证结束日期是否为空
+                conf1 = validator.val({value:start,rule:"isNonEmpty"});  //验证开始日期是否为空
             //判断日期是否为空
             if(conf1){
             	alert(conf1);  //输出非空信息
             	return;
-            }else if(conf2){
-            	alert(conf2);  //输出非空信息
-            	return;
             }
-            console.log("ok")
             http.getDetail({ //发送请求,获取某一课程的详细信息
-                    type: type,
-                    start: start,
-                    end: end
+                    href: href,
+                    start: start
                 })
                 .then((data) => {
                     var {
-                        startNum, endNum
-                    } = data,
-                    increase = endNum - startNum,
-                        html = temp.showDate({ //填入模板
-                            type: type,
-                            start: start,
-                            end:end,
-                            startNum: startNum,
-                            endNum: endNum,
-                            increaseNum: increase
-                        });
+                    num,increase,decrease,freeCourses,freeIncrease,freeDecrease,VipCourses,VipIncrease,VipDecrease,students
+                  		  } = data,
+                        html = temp.showDate({ type,start,end,num,increase,decrease,freeCourses,freeIncrease,freeDecrease,VipCourses,VipIncrease,VipDecrease,students});
                         this.detail.html(html);
                 })
         })
     },
+    //返回昨天的日期
+   
     //当首次点击时，添加查询时间选项并添加课程类型,第二次时,直接改变课程类型
     classify(data) { //data是获得的参数
+    	
         if (getTypes.flag === 0) {
             getTypes.panel.html(`${temp.setTime()}
         					 ${temp.setClassify(data)}`);
-            getTypes.lag++;
+            getTypes.flag++;
         } else {
-            getTypes.categ.html(temp.setClassify(data));
+			$('.categ_m').html(data);
         }
     }
 }

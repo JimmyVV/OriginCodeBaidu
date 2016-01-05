@@ -1,0 +1,23 @@
+{
+  "name": "tercent",
+  "description": "noe",
+  "main": "none",
+  "authors": [
+    "jimmy_thr"
+  ],
+  "license": "ISC",
+  "moduleType": [],
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "jQuery#~2.1.4",
+    "normalize-scss": "normalize.scss#~4.0.3"
+  }
+}
